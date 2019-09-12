@@ -1,0 +1,34 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build -t timodeus/udemy--multi-docker -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true timodeus/udemy--multi-docker npm test
+
+after_success:
+  - docker build -t timodeus/multi-client ./client
+  - docker build -t timodeus/multi-nginx ./nginx
+  - docker build -t timodeus/multi-server ./server
+  - docker build -t timodeus/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push timodeus/multi-client
+  - docker push timodeus/multi-nginx
+  - docker push timodeus/multi-server
+  - docker push timodeus/multi-worker
+
+#deploy:
+#  provider: elasticbeanstalk
+#  region: "eu-central-1"
+#  app: "udemy--docker-react"
+#  env: "UdemyDockerReact-env"
+#  bucket_name: elasticbeanstalk-eu-central-1-533197103328
+#  bucket_path: "udemy--docker-react"
+#  on:
+#    branch: master
+#  access_key_id: $AWS_ACCESS_KEY
+#  secret_access_key:
+#    secure: "$AWS_SECRET_KEY"
